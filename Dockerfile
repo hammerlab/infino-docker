@@ -1,4 +1,4 @@
-FROM jupyter/datascience-notebook:8f56e3c47fec
+FROM jupyter/datascience-notebook:400c69639ea5
 
 USER root
 
@@ -37,9 +37,131 @@ RUN apt-get update && apt-get install -y \
     wget \
     imagemagick \
     parallel \
-    tzdata
+    tzdata \
+    libicu-dev;
 
 # need tzdata for timezone data folder /usr/share/zoneinfo to be populated. required to have R parse datetimes in csvs properly. confirm installed by running `str(OlsonNames())` in R -- should not be empty
+
+# set up R dependencies for Rinfino
+# need to update Rcpp to install lubridate properly
+# RUN Rscript -e "install.packages(c('littler', 'docopt', 'Rcpp'), repo='http://cran.rstudio.com')";
+# RUN ln -s /opt/conda/lib/R/library/littler/examples/install2.r /usr/local/bin/install2.r;
+# RUN Rscript /usr/local/bin/install2.r --error \
+#     -l /opt/conda/lib/R/library \
+#     -r 'http://cran.rstudio.com' \
+#     -r 'http://r-forge.r-project.org' \
+#     -r 'http://www.bioconductor.org/packages/release/bioc' \
+#     sanon \
+#     roxygen2 \
+#     glue \
+#     rmarkdown \
+#     survminer \
+#     reticulate \
+#     lubridate \
+#     readxl \
+#     readr \
+#     testthat \
+#     Rserve \
+#     RColorBrewer \
+#     spatstat \
+#     Rsubread \
+#     statmod \
+#     sva \
+#     rhdf5 \
+#     biomaRt \
+#     tximport \
+#     edgeR \
+#     limma \
+#     purrrlyr \
+#     e1071 \
+#     estimate \
+#     coin \
+#     txtplot \
+#     formatR;
+
+# littler didn't install right above
+
+# catches a warning like "couldn't install package" and makes it an error
+RUN Rscript -e "install.packages(c('Rcpp'), repo='http://cran.rstudio.com')";
+RUN Rscript -e "install.packages(c('stringi', 'stringr'), repos='http://cran.rstudio.com/')"; # requires libicu-dev to be installed
+
+# to install R packages, first check if they're listed here: https://docs.anaconda.com/anaconda/packages/r-language-pkg-docs
+RUN conda install -c r --quiet --yes \
+    'r-essentials' \
+    'r-rserve' \
+    'r-dplyr' \
+    'r-e1071' \
+    'r-glue' \
+    'r-lubridate' \
+    'r-purrr' \
+    'r-stringr' \
+    'r-tibble' \
+    'r-readr' \
+    'r-tidyr' \
+    'r-magrittr' \
+    'r-rmarkdown' \
+    'r-reticulate' \
+    'r-readxl' \
+    'r-testthat' \
+    'r-rcolorbrewer' \
+    'r-formatr';
+
+RUN conda install -c r --quiet --yes 'r-xml';
+RUN conda install --quiet --yes gxx_linux-64; # needed for purrrlyr (https://github.com/RcppCore/Rcpp/issues/770)
+RUN conda install --quiet --yes gcc_linux-64 gfortran_linux-64; # needed for statmod ("/opt/conda/bin/x86_64-conda_cos6-linux-gnu-gfortran: Command not found"): see https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html
+RUN Rscript -e "withCallingHandlers(install.packages(c( \
+    'estimate', \
+    'purrrlyr', \
+    'txtplot', \
+    'statmod'), repos=c('http://cran.rstudio.com', 'http://r-forge.r-project.org', 'http://www.bioconductor.org/packages/release/bioc')), warning = function(w) stop(w))";
+
+RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('biomaRt', \
+'sva', \
+'tximport', \
+'Rsubread', \
+'rhdf5', \
+'edgeR', \
+'limma'))";
+
+
+
+
+# RUN Rscript -e "withCallingHandlers(install.packages(c( \
+#     'Rserve', \
+#     'biomaRt', \
+#     'dplyr', \
+#     'e1071', \
+#     'estimate', \
+#     'ggplot2', \
+#     'glue', \
+#     'lubridate', \
+#     'purrr', \
+#     'purrrlyr', \
+#     'readr', \
+#     'stringr', \
+#     'sva', \
+#     'tibble', \
+#     'tidyr', \
+#     'tximport', \
+#     'txtplot', \
+#     'magrittr', \
+#     'rmarkdown', \
+#     'reticulate', \
+#     'readxl', \
+#     'testthat', \
+#     'RColorBrewer', \
+#     'Rsubread', \
+#     'statmod', \
+#     'rhdf5', \
+#     'edgeR', \ 
+#     'limma', \
+#     'formatR'), repos=c('http://cran.rstudio.com', 'http://r-forge.r-project.org', 'http://www.bioconductor.org/packages/release/bioc')), warning = function(w) stop(w))";
+
+
+#RUN Rscript -e "library(devtools); devtools::install_github('hammerlab/rinfino', dependencies=T)";
+# dev version instead:
+RUN Rscript -e "library(devtools); devtools::install_github('maximz/rinfino@ux_changes', dependencies=T)";
+
 
 USER jovyan
 
@@ -48,6 +170,10 @@ RUN pyensembl install --release 79 --species homo_sapiens
 RUN pip install git+git://github.com/jburos/nbutils
 RUN pip install jupyter_contrib_nbextensions
 RUN jupyter contrib nbextension install --user
+
+# set up infino python package
+COPY infino-private-2 /src/pyinfino
+RUN pip install -e /src/pyinfino
 
 # enable useful nbextensions
 RUN jupyter nbextension enable code_prettify/code_prettify
