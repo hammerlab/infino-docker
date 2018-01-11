@@ -162,18 +162,21 @@ RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('bioma
 # dev version instead:
 RUN Rscript -e "library(devtools); devtools::install_github('maximz/rinfino@ux_changes', dependencies=T)";
 
+# set up infino python package
+COPY infino-private-2 /home/jovyan/pyinfino
+RUN pip install -e /home/jovyan/pyinfino
+
 
 USER jovyan
 
 # set up dependencies
-RUN pyensembl install --release 79 --species homo_sapiens
+#RUN pyensembl install --release 79 --species homo_sapiens
+# that's broken right now (https://github.com/openvax/pyensembl/issues/195)
 RUN pip install git+git://github.com/jburos/nbutils
 RUN pip install jupyter_contrib_nbextensions
 RUN jupyter contrib nbextension install --user
 
-# set up infino python package
-COPY infino-private-2 /src/pyinfino
-RUN pip install -e /src/pyinfino
+
 
 # enable useful nbextensions
 RUN jupyter nbextension enable code_prettify/code_prettify
