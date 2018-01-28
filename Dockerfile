@@ -104,8 +104,9 @@ USER jovyan
 # set up dependencies
 RUN pyensembl install --release 79 --species homo_sapiens # this requires a lot of memory (if we see Killed, it's an out-of-memory error that requires allocating more memory to the docker machine or VM)
 RUN pip install git+git://github.com/jburos/nbutils
-RUN pip install jupyter_contrib_nbextensions
-RUN jupyter contrib nbextension install --user
+RUN pip install jupyter_contrib_nbextensions==0.4.0
+RUN pip install --upgrade jupyter-core # necessary for next line
+RUN jupyter contrib nbextension install --user # seems to require jupyter-core>=4.4.0
 
 
 
