@@ -74,7 +74,7 @@ RUN conda install -c r --quiet --yes \
 
 RUN conda install -c r --quiet --yes 'r-xml';
 RUN conda install --quiet --yes gxx_linux-64; # needed for purrrlyr (https://github.com/RcppCore/Rcpp/issues/770)
-RUN conda install --quiet --yes gcc_linux-64 gfortran_linux-64; # needed for statmod ("/opt/conda/bin/x86_64-conda_cos6-linux-gnu-gfortran: Command not found"): see https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html
+RUN conda install --quiet --yes gcc_linux-64 gfortran_linux-64; # needed for statmod ("/opt/conda/bin/x86_64-conda_cos6-linux-gnu-gfortran: Command not found"): see https://conda.io/docs/di-guide/tasks/build-packages/compiler-tools.html
 RUN Rscript -e "withCallingHandlers(install.packages(c( \
     'estimate', \
     'purrrlyr', \
@@ -95,7 +95,8 @@ RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('grimb
 RUN Rscript -e "library(devtools); devtools::install_github('maximz/rinfino@ux_changes', dependencies=T)";
 
 # set up infino python package
-RUN pip install -e git+https://github.com/hammerlab/infino.git@develop
+# see https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support
+RUN pip install -e git+https://github.com/hammerlab/infino.git@develop#egg=infino
 
 
 USER jovyan
