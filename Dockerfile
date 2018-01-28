@@ -42,46 +42,10 @@ RUN apt-get update && apt-get install -y \
 
 # need tzdata for timezone data folder /usr/share/zoneinfo to be populated. required to have R parse datetimes in csvs properly. confirm installed by running `str(OlsonNames())` in R -- should not be empty
 
+
+## set up R dependencies for Rinfino
+
 RUN ln -s /bin/tar /bin/gtar; # necessary for bioclite and devtools::install_github, at least for grimbough/biomaRt -- calls out to gtar for some reason
-
-# set up R dependencies for Rinfino
-# need to update Rcpp to install lubridate properly
-# RUN Rscript -e "install.packages(c('littler', 'docopt', 'Rcpp'), repo='http://cran.rstudio.com')";
-# RUN ln -s /opt/conda/lib/R/library/littler/examples/install2.r /usr/local/bin/install2.r;
-# RUN Rscript /usr/local/bin/install2.r --error \
-#     -l /opt/conda/lib/R/library \
-#     -r 'http://cran.rstudio.com' \
-#     -r 'http://r-forge.r-project.org' \
-#     -r 'http://www.bioconductor.org/packages/release/bioc' \
-#     sanon \
-#     roxygen2 \
-#     glue \
-#     rmarkdown \
-#     survminer \
-#     reticulate \
-#     lubridate \
-#     readxl \
-#     readr \
-#     testthat \
-#     Rserve \
-#     RColorBrewer \
-#     spatstat \
-#     Rsubread \
-#     statmod \
-#     sva \
-#     rhdf5 \
-#     biomaRt \
-#     tximport \
-#     edgeR \
-#     limma \
-#     purrrlyr \
-#     e1071 \
-#     estimate \
-#     coin \
-#     txtplot \
-#     formatR;
-
-# littler didn't install right above
 
 # catches a warning like "couldn't install package" and makes it an error
 RUN Rscript -e "install.packages(c('Rcpp'), repo='http://cran.rstudio.com')";
@@ -126,54 +90,18 @@ RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('grimb
 'limma'))";
 
 
-
-
-# RUN Rscript -e "withCallingHandlers(install.packages(c( \
-#     'Rserve', \
-#     'biomaRt', \
-#     'dplyr', \
-#     'e1071', \
-#     'estimate', \
-#     'ggplot2', \
-#     'glue', \
-#     'lubridate', \
-#     'purrr', \
-#     'purrrlyr', \
-#     'readr', \
-#     'stringr', \
-#     'sva', \
-#     'tibble', \
-#     'tidyr', \
-#     'tximport', \
-#     'txtplot', \
-#     'magrittr', \
-#     'rmarkdown', \
-#     'reticulate', \
-#     'readxl', \
-#     'testthat', \
-#     'RColorBrewer', \
-#     'Rsubread', \
-#     'statmod', \
-#     'rhdf5', \
-#     'edgeR', \ 
-#     'limma', \
-#     'formatR'), repos=c('http://cran.rstudio.com', 'http://r-forge.r-project.org', 'http://www.bioconductor.org/packages/release/bioc')), warning = function(w) stop(w))";
-
-
 #RUN Rscript -e "library(devtools); devtools::install_github('hammerlab/rinfino', dependencies=T)";
 # dev version instead:
 RUN Rscript -e "library(devtools); devtools::install_github('maximz/rinfino@ux_changes', dependencies=T)";
 
 # set up infino python package
-COPY infino-private-2 /home/jovyan/pyinfino
-RUN pip install -e /home/jovyan/pyinfino
+RUN pip install -e git+https://github.com/hammerlab/infino.git@develop
 
 
 USER jovyan
 
 # set up dependencies
-#RUN pyensembl install --release 79 --species homo_sapiens
-# that's broken right now (https://github.com/openvax/pyensembl/issues/195)
+RUN pyensembl install --release 79 --species homo_sapiens # this requires a lot of memory (if we see Killed, it's an out-of-memory error that requires allocating more memory to the docker machine or VM)
 RUN pip install git+git://github.com/jburos/nbutils
 RUN pip install jupyter_contrib_nbextensions
 RUN jupyter contrib nbextension install --user
