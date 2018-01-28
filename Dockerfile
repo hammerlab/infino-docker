@@ -42,6 +42,8 @@ RUN apt-get update && apt-get install -y \
 
 # need tzdata for timezone data folder /usr/share/zoneinfo to be populated. required to have R parse datetimes in csvs properly. confirm installed by running `str(OlsonNames())` in R -- should not be empty
 
+RUN ln -s /bin/tar /bin/gtar; # necessary for bioclite and devtools::install_github, at least for grimbough/biomaRt -- calls out to gtar for some reason
+
 # set up R dependencies for Rinfino
 # need to update Rcpp to install lubridate properly
 # RUN Rscript -e "install.packages(c('littler', 'docopt', 'Rcpp'), repo='http://cran.rstudio.com')";
@@ -115,7 +117,7 @@ RUN Rscript -e "withCallingHandlers(install.packages(c( \
     'txtplot', \
     'statmod'), repos=c('http://cran.rstudio.com', 'http://r-forge.r-project.org', 'http://www.bioconductor.org/packages/release/bioc')), warning = function(w) stop(w))";
 
-RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('biomaRt', \
+RUN Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite(c('grimbough/biomaRt', \
 'sva', \
 'tximport', \
 'Rsubread', \
