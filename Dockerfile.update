@@ -1,0 +1,6 @@
+FROM gcr.io/pici-hammerlab/infino-env:latest
+USER root
+RUN pip install -e git+https://github.com/hammerlab/infino.git@develop#egg=infino
+USER jovyan
+# EXPOSE 8888
+# CMD Rscript /home/jovyan/runRserve.R && start-notebook.sh --NotebookApp.token=''

@@ -1,0 +1,1 @@
+docker build -f Dockerfile.update -t gcr.io/pici-hammerlab/infino-env:develop .
