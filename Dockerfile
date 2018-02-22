@@ -96,6 +96,7 @@ RUN Rscript -e "library(devtools); devtools::install_github('maximz/rinfino@ux_c
 
 # set up infino python package
 # see https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support
+ARG CACHEBUST=1
 RUN pip install -e git+https://github.com/hammerlab/infino.git@develop#egg=infino
 
 
